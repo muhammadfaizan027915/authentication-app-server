@@ -1,18 +1,11 @@
 const emailer = require("./Services/emailService");
-const handlebars = require("express-handlebars");
 const dotenv = require("dotenv");
 const express = require("express");
 const app = express();
-const path = require("path");
 
 // Config Dotenv
 dotenv.config();
 app.use(express.json());
-
-// Setup View Engine
-app.engine(".hbs", handlebars.engine({ extname: ".hbs" }));
-app.set("view engine", ".hbs");
-app.set("views", "./Views");
 
 // Email route
 app.post("/send-email", (req, res) => {
