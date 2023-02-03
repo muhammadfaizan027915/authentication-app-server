@@ -1,4 +1,5 @@
 const emailer = require("./Services/emailService");
+const scheduleEvents = require("./Services/scheduleEvents");
 const dotenv = require("dotenv");
 const express = require("express");
 const app = express();
@@ -24,8 +25,25 @@ app.post("/send-email", (req, res) => {
       });
     })
     .catch((error) => {
-      res.status(400).send(error.message);
+      res.status(400).json({ message: error.message });
     });
+});
+
+// Schedule Name print
+app.post("/print-name", (req, res) => {
+  const { name } = req.body;
+
+  if (!name)
+    return res
+      .status(400)
+      .json({ message: "Please fill the required fileds!" });
+
+  const schedule = scheduleEvents(name);
+  
+  if (!schedule)
+    return res.status(500).json({ message: "Internal server error!" });
+
+  res.status(200).json({ message: "Schedule successfully executed!" });
 });
 
 // PORT to run the server

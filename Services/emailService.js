@@ -5,7 +5,7 @@ module.exports = (from, to, subject, name, role, message) => {
   const transport = emailer.createTransport({
     host: "smtp.gmail.com",
     port: 465,
-    secure: "SSL",
+    secure: true,
     auth: {
       user: process.env.EMAIL,
       pass: process.env.PASS,
