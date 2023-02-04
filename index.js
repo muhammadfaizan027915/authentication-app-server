@@ -1,50 +1,61 @@
-const emailer = require("./Services/emailService");
-const scheduleEvents = require("./Services/scheduleEvents");
+const init = require("./Services/authService");
+const session = require("express-session");
+const cookieParser = require("cookie-parser");
+const mongoose = require("mongoose");
+const passport = require("passport");
 const dotenv = require("dotenv");
 const express = require("express");
+const cors = require("cors");
 const app = express();
 
 // Config Dotenv
 dotenv.config();
 app.use(express.json());
+app.use(
+  cors({
+    origin: "http://localhost:3000",
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
+    credentials: true,
+  })
+);
 
-// Email route
-app.post("/send-email", (req, res) => {
-  const { from, to, subject, name, role, message } = req.body;
+// Session Configuration
+app.use(cookieParser());
+app.use(
+  session({
+    secret: process.env.SESSION_KEY,
+    name: "sessions",
+    resave: true,
+    saveUninitialized: true,
+    key: "session",
+    cookie: {
+      path: "/",
+      httpOnly: true,
+      maxAge: 60 * 60 * 1000,
+    },
+  })
+);
 
-  if (!from || !to || !subject || !message)
-    return res
-      .status(400)
-      .json({ message: "Please provide all the required fields!" });
+// // Configure passport
+init(passport);
+app.use(passport.authenticate("session"));
+app.use(passport.initialize());
+app.use(passport.session());
 
-  emailer(from, to, subject, name, role, message)
-    .then((info) => {
-      res.status(200).json({
-        message: "Eamil sent successfully!",
-        messageId: info.messageId,
-      });
-    })
-    .catch((error) => {
-      res.status(400).json({ message: error.message });
-    });
-});
+// Routes
+app.use("", require("./Routes/index"));
 
-// Schedule Name print
-app.post("/print-name", (req, res) => {
-  const { name } = req.body;
-
-  if (!name)
-    return res
-      .status(400)
-      .json({ message: "Please fill the required fileds!" });
-
-  const schedule = scheduleEvents(name);
-  
-  if (!schedule)
-    return res.status(500).json({ message: "Internal server error!" });
-
-  res.status(200).json({ message: "Schedule successfully executed!" });
-});
+// Connect to the database
+mongoose
+  .connect(
+    `mongodb+srv://faizan027915:faizan027915@mern.jsr5rzh.mongodb.net/?retryWrites=true&w=majority`,
+    {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    }
+  )
+  .then(() => console.log("Connected to the database..."))
+  .catch((err) => console.log("Failed to connect to the database...", err));
 
 // PORT to run the server
 const PORT = process.env.PORT || 4000;
